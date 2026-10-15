@@ -1,7 +1,5 @@
 # POV Autopilot for PagerDuty
 
-[![ci](https://github.com/DenzelR12/pov-autopilot/actions/workflows/ci.yml/badge.svg)](https://github.com/DenzelR12/pov-autopilot/actions/workflows/ci.yml)
-
 **Automates the repeatable 80% of the Solutions Architect motion for incident management deals:** discovery, solution design, proof of value, the business case, and Opsgenie migration. It starts from the one artifact every prospect already has, their alert history, and turns it into a report, a success plan, and Terraform their platform team can apply on day one.
 
 ```
@@ -103,7 +101,7 @@ cd ../.. && pdsa replay datadog_export.csv --storm 0 --send          # watch the
 pytest -q
 ```
 
-21 tests cover normalization, every funnel stage, Opsgenie delay and restriction math, gap reporting, Events API payloads, key redaction, and HCL validity of all generated Terraform. CI also runs `terraform validate` against both example outputs.
+21 tests cover normalization, every funnel stage, Opsgenie delay and restriction math, gap reporting, Events API payloads, key redaction, and HCL validity of all generated Terraform. [`ci/github-actions-ci.yml`](ci/github-actions-ci.yml) also runs `terraform validate` against fresh and example outputs; move it to `.github/workflows/` to enable it.
 
 ## Limits
 
