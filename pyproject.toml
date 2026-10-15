@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pov-autopilot"
+version = "0.1.0"
+description = "Automates the Solutions Architect motion for PagerDuty: discovery, design as Terraform, POV replay, business case, Opsgenie migration."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Denzel Robinson" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+pdsa = "pdsa.cli:main"
+
+[tool.setuptools]
+packages = ["pdsa"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
