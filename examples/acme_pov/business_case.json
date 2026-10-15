@@ -1,0 +1,23 @@
+{
+  "assumptions": {
+    "engineer_cost_per_hour": 100.0,
+    "minutes_lost_per_interruption": 10.0,
+    "off_hours_multiplier": 1.5,
+    "current_mttr_min": 60.0,
+    "mttr_improvement": 0.2,
+    "customer_impacting_share": 0.05,
+    "downtime_cost_per_min": 500.0,
+    "responders_per_incident": 2.0,
+    "seats": 0,
+    "price_per_seat_month": 0.0
+  },
+  "interruptions_avoided_month": 1651.0,
+  "hours_reclaimed_month": 374.0,
+  "toil_savings_year": 448793,
+  "downtime_min_avoided_year": 1534,
+  "downtime_savings_year": 766800,
+  "responder_savings_year": 102240,
+  "total_value_year": 1317833,
+  "license_cost_year": 0,
+  "payback_months": null
+}

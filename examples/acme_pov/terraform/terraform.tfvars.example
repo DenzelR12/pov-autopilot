@@ -1,0 +1,7 @@
+pagerduty_token = "replace-me"
+team_members = {
+  "commerce" = ["oncall-commerce@example.com"]
+  "data" = ["oncall-data@example.com"]
+  "discovery" = ["oncall-discovery@example.com"]
+  "platform" = ["oncall-platform@example.com"]
+}

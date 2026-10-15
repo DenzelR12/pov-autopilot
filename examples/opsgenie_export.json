@@ -1,0 +1,88 @@
+{
+  "teams": [
+    {"id": "t-commerce", "name": "commerce", "description": "Checkout and payments"},
+    {"id": "t-platform", "name": "platform", "description": "Identity and edge"}
+  ],
+  "users": [
+    {"username": "ana.rivera@acme.example", "fullName": "Ana Rivera"},
+    {"username": "ben.okafor@acme.example", "fullName": "Ben Okafor"},
+    {"username": "chloe.tan@acme.example", "fullName": "Chloe Tan"},
+    {"username": "dev.patel@acme.example", "fullName": "Dev Patel"},
+    {"username": "erin.walsh@acme.example", "fullName": "Erin Walsh"}
+  ],
+  "schedules": [
+    {
+      "id": "s-commerce", "name": "commerce primary", "timezone": "America/New_York", "enabled": true,
+      "ownerTeam": {"id": "t-commerce", "name": "commerce"},
+      "rotations": [
+        {
+          "id": "r1", "name": "weekly", "startDate": "2026-11-02T14:00:00Z", "type": "weekly", "length": 1,
+          "participants": [
+            {"type": "user", "username": "ana.rivera@acme.example"},
+            {"type": "user", "username": "ben.okafor@acme.example"},
+            {"type": "user", "username": "chloe.tan@acme.example"}
+          ]
+        },
+        {
+          "id": "r2", "name": "weekend cover", "startDate": "2026-11-07T14:00:00Z", "type": "daily", "length": 2,
+          "participants": [
+            {"type": "user", "username": "dev.patel@acme.example"},
+            {"type": "none"}
+          ],
+          "timeRestriction": {
+            "type": "weekday-and-time-of-day",
+            "restrictions": [
+              {"startDay": "saturday", "startHour": 9, "startMin": 0, "endDay": "monday", "endHour": 9, "endMin": 0}
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "s-platform", "name": "platform business hours", "timezone": "Europe/London", "enabled": true,
+      "ownerTeam": {"id": "t-platform", "name": "platform"},
+      "rotations": [
+        {
+          "id": "r3", "name": "daytime", "startDate": "2026-11-02T09:00:00Z", "type": "daily", "length": 1,
+          "participants": [
+            {"type": "user", "username": "erin.walsh@acme.example"},
+            {"type": "user", "username": "dev.patel@acme.example"}
+          ],
+          "timeRestriction": {
+            "type": "time-of-day",
+            "restriction": {"startHour": 8, "startMin": 0, "endHour": 18, "endMin": 30}
+          }
+        }
+      ]
+    }
+  ],
+  "escalations": [
+    {
+      "id": "e-commerce", "name": "commerce escalation", "ownerTeam": {"id": "t-commerce", "name": "commerce"},
+      "rules": [
+        {"condition": "if-not-acked", "notifyType": "default", "delay": {"timeAmount": 0, "timeUnit": "minutes"},
+         "recipient": {"type": "schedule", "name": "commerce primary"}},
+        {"condition": "if-not-acked", "notifyType": "next", "delay": {"timeAmount": 10, "timeUnit": "minutes"},
+         "recipient": {"type": "schedule", "name": "commerce primary"}},
+        {"condition": "if-not-closed", "notifyType": "default", "delay": {"timeAmount": 25, "timeUnit": "minutes"},
+         "recipient": {"type": "user", "username": "ana.rivera@acme.example"}}
+      ],
+      "repeat": {"waitInterval": 10, "count": 2, "resetRecipientStates": false, "closeAlertAfterAll": false}
+    },
+    {
+      "id": "e-platform", "name": "platform escalation", "ownerTeam": {"id": "t-platform", "name": "platform"},
+      "rules": [
+        {"condition": "if-not-acked", "notifyType": "default", "delay": {"timeAmount": 5, "timeUnit": "minutes"},
+         "recipient": {"type": "team", "name": "platform"}},
+        {"condition": "if-not-acked", "notifyType": "default", "delay": {"timeAmount": 1, "timeUnit": "hours"},
+         "recipient": {"type": "user", "username": "frank.lee@acme.example"}}
+      ]
+    }
+  ],
+  "services": [
+    {"id": "svc1", "name": "checkout-api", "teamId": "t-commerce", "description": "Customer checkout"},
+    {"id": "svc2", "name": "payments", "teamId": "t-commerce", "description": "Card and wallet payments"},
+    {"id": "svc3", "name": "identity", "teamId": "t-platform", "description": "Login and tokens"},
+    {"id": "svc4", "name": "legacy-batch", "teamId": "t-unknown", "description": "Nightly jobs"}
+  ]
+}
