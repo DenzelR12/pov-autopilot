@@ -1,9 +1,9 @@
 # POV Autopilot for PagerDuty
 
-**Automates the repeatable 80% of the Solutions Architect motion for incident management deals:** discovery, solution design, proof of value, the business case, and Opsgenie migration. It starts from the one artifact every prospect already has, their alert history, and turns it into a report, a success plan, and Terraform their platform team can apply on day one.
+**Automates the repeatable 80% of the Solutions Architect motion for incident management deals:** discovery, solution design, proof of value, the business case, and Opsgenie migration. It starts from the one artifact every prospect already has, their alert history from New Relic, Nagios, Zabbix, Splunk, Zenoss, ServiceNow, Datadog, CloudWatch or Prometheus, and turns it into a report, a success plan, and Terraform their platform team can apply on day one.
 
 ```
-alert export (CSV) ──► discover ──► report.html + summary.md     (exec readout)
+alert export (any) ──► discover ──► report.html + summary.md     (exec readout)
                           │    └──► business_case.json           (ROI, every assumption editable)
                           ├──────► POV success plan              (measurable, from their data)
                           └──────► terraform/                    (services, schedules, escalation,
@@ -51,8 +51,20 @@ Sample output for a synthetic 30 day history (see [`examples/acme_pov`](examples
 
 ## Commands
 
-### `pdsa discover alerts.csv [--json out.json]`
-Accepts exports from Datadog, Prometheus Alertmanager, CloudWatch, Nagios and similar. Columns are matched by common aliases (`created_at`, `monitor_name`, `hostname`, `priority`, `state`, ...). Severities like `P1` or `sev2` and statuses like `OK` or `resolved` are normalized.
+### `pdsa discover EXPORT [--format auto] [--json out.json]`
+Reads the export a prospect already has, in its native format, and detects which tool it came from:
+
+| Tool | Export it reads |
+|---|---|
+| New Relic | `NrAiIncident` events from NRQL, CSV or JSON (`conditionName`, `event`, `priority`) |
+| Nagios / Icinga | `nagios.log`: NOTIFICATION lines (what actually paged), else HARD state alerts; SOFT retries are skipped |
+| Zabbix | Monitoring > Problems CSV export, or `event.get` JSON from the API; recovery time becomes a resolve |
+| Splunk | Search or triggered alert export with `_time`, including ITSI notable event severities 1 to 6 |
+| Zenoss | Events console CSV; each event's `Count` expands back into the triggers the team received |
+| ServiceNow | Event Management `em_event` or `em_alert` list export; severity 0 (clear) resolves |
+| Datadog, CloudWatch, Prometheus, Opsgenie dumps | Any CSV with a timestamp and a check or summary column, matched by common aliases |
+
+Severities like `P1`, `sev2`, `Disaster` or `Major` and statuses like `OK`, `RESOLVED` or `close` are normalized. Timestamps without a zone are read as UTC, so confirm the export's zone before quoting off hours numbers. `pdsa convert EXPORT --out alerts.csv` writes the normalized CSV, for review or anonymization before analysis.
 
 The funnel is built from rules a customer can audit line by line:
 
@@ -63,7 +75,7 @@ The funnel is built from rules a customer can audit line by line:
 
 These are deliberately conservative stand ins for the platform's own grouping, so the live POV should meet or beat every number in the report. It also detects **cross service storms** (one root cause, many services) and infers service ownership.
 
-### `pdsa pov alerts.csv --customer NAME [--out DIR] [assumption flags]`
+### `pdsa pov EXPORT --customer NAME [--out DIR] [assumption flags]`
 Writes `report.html`, `summary.md`, `discovery.json`, `business_case.json`, `design.json` and `terraform/`. The Terraform uses the official `PagerDuty/pagerduty` provider and contains:
 
 * one team, weekly schedule and two level escalation policy per discovered team, with members supplied through `var.team_members`
@@ -101,7 +113,7 @@ cd ../.. && pdsa replay datadog_export.csv --storm 0 --send          # watch the
 pytest -q
 ```
 
-21 tests cover normalization, every funnel stage, Opsgenie delay and restriction math, gap reporting, Events API payloads, key redaction, and HCL validity of all generated Terraform. [`ci/github-actions-ci.yml`](ci/github-actions-ci.yml) also runs `terraform validate` against fresh and example outputs; move it to `.github/workflows/` to enable it.
+38 tests cover every supported monitoring tool export, normalization, every funnel stage, Opsgenie delay and restriction math, gap reporting, Events API payloads, key redaction, and HCL validity of all generated Terraform. [`ci/github-actions-ci.yml`](ci/github-actions-ci.yml) also runs `terraform validate` against fresh and example outputs; move it to `.github/workflows/` to enable it.
 
 ## Limits
 

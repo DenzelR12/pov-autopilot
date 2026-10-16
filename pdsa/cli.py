@@ -9,7 +9,7 @@ import sys
 from dataclasses import fields
 from pathlib import Path
 
-from . import __version__, alerts, design, discover, opsgenie, replay, report, roi, sample, terraform
+from . import __version__, alerts, design, discover, opsgenie, readers, replay, report, roi, sample, terraform
 
 
 def _assumptions(args) -> roi.Assumptions:
@@ -31,8 +31,20 @@ def cmd_sample(args):
     print(f"wrote {len(data):,} alert events to {args.out}")
 
 
+def _load(args):
+    data, fmt = readers.load(args.alerts, args.format)
+    print(f"read {len(data):,} alert events ({fmt} format)", file=sys.stderr)
+    return data
+
+
+def cmd_convert(args):
+    data = _load(args)
+    alerts.write_csv(data, args.out)
+    print(f"wrote {len(data):,} normalized alert events to {args.out}")
+
+
 def cmd_discover(args):
-    d = discover.analyze(alerts.load_csv(args.alerts))
+    d = discover.analyze(_load(args))
     payload = d.to_dict()
     if args.json:
         Path(args.json).write_text(json.dumps(payload, indent=2))
@@ -46,7 +58,7 @@ def cmd_discover(args):
 def cmd_pov(args):
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
-    d = discover.analyze(alerts.load_csv(args.alerts))
+    d = discover.analyze(_load(args))
     bc = roi.build(d, _assumptions(args))
     dsg = design.from_discovery(d, args.customer, time_zone=args.tz)
     (out / "discovery.json").write_text(json.dumps(d.to_dict(), indent=2))
@@ -78,7 +90,7 @@ def cmd_migrate(args):
 
 
 def cmd_replay(args):
-    data = alerts.load_csv(args.alerts)
+    data = _load(args)
     if args.storm is not None:
         d = discover.analyze(list(data))
         storms = sorted(d.storms, key=lambda s: -s["alerts"])
@@ -107,13 +119,23 @@ def main(argv=None):
     s.add_argument("--out", default="alerts.csv")
     s.set_defaults(fn=cmd_sample)
 
+    fmt_help = "export format; auto detects " + ", ".join(readers.FORMATS)
+
+    s = sub.add_parser("convert", help="normalize any supported monitoring export to the standard CSV")
+    s.add_argument("alerts")
+    s.add_argument("--format", default="auto", choices=("auto",) + readers.FORMATS, help=fmt_help)
+    s.add_argument("--out", default="alerts.csv")
+    s.set_defaults(fn=cmd_convert)
+
     s = sub.add_parser("discover", help="noise funnel and recommendations from an alert export")
     s.add_argument("alerts")
+    s.add_argument("--format", default="auto", choices=("auto",) + readers.FORMATS, help=fmt_help)
     s.add_argument("--json")
     s.set_defaults(fn=cmd_discover)
 
     s = sub.add_parser("pov", help="full pack: report, business case, success plan, Terraform")
     s.add_argument("alerts")
+    s.add_argument("--format", default="auto", choices=("auto",) + readers.FORMATS, help=fmt_help)
     s.add_argument("--customer", default="Customer")
     s.add_argument("--tz", default="America/New_York")
     s.add_argument("--out", default="pov_pack")
@@ -131,6 +153,7 @@ def main(argv=None):
 
     s = sub.add_parser("replay", help="replay alert history into PagerDuty (dry run by default)")
     s.add_argument("alerts")
+    s.add_argument("--format", default="auto", choices=("auto",) + readers.FORMATS, help=fmt_help)
     s.add_argument("--routing-key")
     s.add_argument("--storm", type=int, help="replay the Nth largest storm (0 = worst)")
     s.add_argument("--minutes", type=int, default=20)
